@@ -1,0 +1,43 @@
+name: "🚀 deploy CI"
+on:
+  push:
+    branches:
+      - dev3
+    paths-ignore:
+      - 'README*'
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Get code
+        uses: actions/checkout@v2
+      - name: "📂 SFTP Sync files"
+        uses: swillner/sftp-sync-action@v1.0
+        with:
+          server: ${{ github.ref_name }}.lokavaluto.fr
+          port: 10322
+          user: monujo
+          user_private_key: ${{ secrets.sftp_private_key }}
+          host_public_key:
+          local: ./
+          remote: /doc
+          mirror_options: "--exclude-glob=.git*/ --verbose"
+      ## This part is to ensure that we can trigger actions after
+      ## the sync occured on the destination host.
+      - name: 🔨 Prepare last-updated
+        run: |
+          mkdir last-updated
+          date > last-updated/done
+      - name: "📂 SFTP Send last-updated"
+        uses: swillner/sftp-sync-action@v1.0
+        with:
+          server: ${{ github.ref_name }}.lokavaluto.fr
+          port: 10322
+          user: monujo
+          user_private_key: ${{ secrets.sftp_private_key }}
+          host_public_key:
+          local: ./last-updated
+          remote: /doc.updated
+          mirror_options: "--verbose"
