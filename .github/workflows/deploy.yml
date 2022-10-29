@@ -1,0 +1,27 @@
+name: "🚀 deploy CI"
+on:
+  push:
+    branches:
+      - publish
+    paths-ignore:
+      - 'README*'
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Get code
+        uses: actions/checkout@v2
+      - name: "📂 SFTP Sync files"
+        uses: swillner/sftp-sync-action@v1.0
+        with:
+          server: ${{ github.ref_name }}.lokavaluto.fr
+          port: 10322
+          user: monujo
+          user_private_key: ${{ secrets.sftp_private_key }}
+          host_public_key:
+          local: ./
+          remote: /hugo
+          mirror_options: "--verbose"
+
